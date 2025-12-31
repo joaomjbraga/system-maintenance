@@ -1,326 +1,490 @@
-# 🗑️ FlatTrash
+# system-maintenance
 
-<div align="center">
-
-![FlatTrash Banner](.github/cap1.png)
-
-**Script completo de limpeza e otimização para sistemas Linux baseados em Debian/Ubuntu/Pop!\_OS**
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Shell Script](https://img.shields.io/badge/Shell_Script-Bash-green.svg)](https://www.gnu.org/software/bash/)
-[![Version](https://img.shields.io/badge/version-2.1-blue.svg)](https://github.com/joaomjbraga/flattrash)
-
-</div>
+**Script de manutenção de sistema para produção em Debian/Ubuntu Linux**
 
 ---
 
-## 📋 Sobre o Projeto
+## Visão Geral
 
-**FlatTrash** é um script bash poderoso projetado para automatizar a limpeza e otimização de sistemas Linux. Ele remove pacotes desnecessários, limpa caches, arquivos temporários e libera espaço em disco de forma segura e eficiente.
+**system-maintenance** automatiza a limpeza e otimização abrangente do sistema para distribuições Linux baseadas em Debian. Projetado para confiabilidade em ambientes de produção com tratamento robusto de erros, registro abrangente e operação não-interativa adequada para automação.
 
-Desenvolvido e testado no **Pop!\_OS**, mas compatível com qualquer distribuição baseada em Debian/Ubuntu.
+**Recursos:**
+- Não-interativo por padrão (pronto para cron/CI)
+- Modo de simulação (dry-run) abrangente
+- Registro estruturado com rastreamento de erros
+- Backup de pacotes antes das operações
+- Detecção de ambiente (container, WSL, desktop, servidor)
+- Configurável via flags CLI
+- Operação segura com validação extensiva de entrada
 
-### ✨ Características
-
-- 📊 **Relatórios Detalhados** - Estatísticas em tempo real sobre espaço liberado
-- 🔍 **Análise Completa** - Verifica e remove múltiplos tipos de arquivos desnecessários
-- ✅ **Seguro e Confiável** - Verificações de segurança antes de executar operações críticas
-- 🚀 **Automatizado** - Executa todas as tarefas de limpeza com um único comando
-- 📦 **Suporte Flatpak & Snap** - Limpeza especializada para aplicações Flatpak e Snap
-- 📝 **Sistema de Logs** - Registra todas as operações em arquivo de log
-- 💾 **Backup Automático** - Cria ponto de restauração antes da limpeza
-- 🔄 **Tratamento de Erros** - Gestão robusta de erros e falhas
+**Testado em:** Pop!_OS, Ubuntu, Debian
 
 ---
 
-## 🎯 O Que o Script Faz
+## O Que Ele Faz
 
-O FlatTrash executa as seguintes operações de limpeza em 10 etapas:
+O script executa 11 operações de manutenção:
 
-1. **Atualização de Pacotes** - Atualiza a lista de pacotes disponíveis
-2. **Remoção de Dependências** - Remove pacotes e dependências não utilizadas (`apt autoremove`)
-3. **Limpeza de Cache APT** - Limpa arquivos de cache do gerenciador de pacotes (`apt clean` e `apt autoclean`)
-4. **Remoção de Órfãos** - Identifica e remove pacotes órfãos com deborphan
-5. **Configurações Residuais** - Remove configurações de pacotes desinstalados
-6. **Limpeza Flatpak** - Remove aplicações Flatpak não utilizadas e repara instalações
-7. **Otimização Snap** - Remove versões antigas de snaps desabilitados
-8. **Logs do Sistema** - Limpa logs com journalctl (mantém últimos 7 dias ou máx 100MB)
-9. **Cache de Usuário** - Limpa ~/.cache (arquivos +30 dias) e miniaturas de todos os usuários
-10. **Cache do Sistema** - Limpa /var/cache, /tmp, /var/tmp e caches Python/npm
-
-### 🔧 Otimizações Adicionais
-
-- Limpeza do cache do man
-- Atualização do database do locate
-- Remoção de logs compactados antigos (.gz, .log.\*)
-- Limpeza de cache pip e npm
+1. **Listas de Pacotes** - Atualiza o banco de dados de pacotes APT
+2. **Pacotes Não Utilizados** - Remove pacotes e dependências (`apt autoremove`)
+3. **Cache APT** - Limpa o cache do gerenciador de pacotes (`apt clean`, `autoclean`)
+4. **Pacotes Órfãos** - Remove pacotes órfãos via deborphan
+5. **Configurações Residuais** - Purga arquivos de configuração de pacotes removidos
+6. **Flatpak** - Remove apps Flatpak não utilizados e repara instalações
+7. **Snap** - Remove revisões de snap desabilitadas
+8. **Logs do Sistema** - Limpa logs do journal (limite de 7 dias ou 100MB)
+9. **Caches de Usuário** - Limpa `~/.cache` e miniaturas (arquivos com mais de 30 dias)
+10. **Arquivos Temporários** - Remove arquivos antigos de `/tmp` e `/var/tmp`
+11. **Caches Diversos** - Limpa cache man, pip, npm e atualiza banco de dados locate
 
 ---
 
-## 🚀 Instalação e Uso
+## Instalação
 
-### Pré-requisitos
+### Requisitos
 
-- Sistema Linux baseado em Debian/Ubuntu (testado no Pop!\_OS)
+- Sistema baseado em Debian/Ubuntu
 - Acesso root (sudo)
-- Bash 4.0 ou superior
-- Conexão com internet (recomendada)
+- Bash 4.0+
+- Conexão com internet (recomendado)
 
-### Instalação
-
-```bash
-# Clone o repositório
-git clone https://github.com/joaomjbraga/flattrash.git
-
-# Entre no diretório
-cd flattrash
-
-# Dê permissão de execução
-chmod +x flattrash.sh
-```
-
-### Executando o Script
+### Configuração
 
 ```bash
-# Execute com privilégios de root
-sudo ./flattrash.sh
-```
+# Clonar repositório
+git clone https://github.com/joaomjbraga/system-maintenance.git
+cd system-maintenance
 
-O script irá:
+# Tornar executável
+chmod +x system-maintenance.sh
 
-1. Verificar se está sendo executado como root
-2. Verificar conexão com internet
-3. Exibir um banner informativo
-4. Criar backup da lista de pacotes instalados
-5. Mostrar o espaço livre atual
-6. Executar todas as 10 operações de limpeza
-7. Apresentar um relatório final com estatísticas
-8. Perguntar se deseja reiniciar o sistema
-
-### 📝 Sistema de Logs
-
-Todos os logs são salvos automaticamente em:
-
-```
-/var/log/flattrash_YYYYMMDD_HHMMSS.log
-```
-
-O arquivo de log contém:
-
-- Timestamp de cada operação
-- Status (SUCCESS, WARNING, ERROR)
-- Detalhes de todas as operações executadas
-
----
-
-## 📸 Captura de Tela
-
-![FlatTrash em Ação](.github/cap2.png)
-
----
-
-## 🛡️ Segurança
-
-O FlatTrash foi projetado com segurança em mente:
-
-- ✅ Verifica se está sendo executado como root
-- ✅ Cria backup da lista de pacotes antes de limpar
-- ✅ Usa `set -euo pipefail` para melhor tratamento de erros
-- ✅ Usa operações seguras do APT com `--purge` e `--auto-remove`
-- ✅ Remove apenas arquivos temporários e caches seguros
-- ✅ Mantém logs recentes (7 dias) e limita tamanho (100MB)
-- ✅ Limpa apenas arquivos de cache com +30 dias de idade
-- ✅ Não remove pacotes do sistema críticos
-- ✅ Função `safe_remove` para evitar erros em diretórios inexistentes
-- ✅ Verifica existência de comandos antes de usá-los
-
----
-
-## 📊 Exemplo de Saída
-
-```
-╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
-║   ███████╗██╗      █████╗ ████████╗████████╗██████╗      ║
-║   ██╔════╝██║     ██╔══██╗╚══██╔══╝╚══██╔══╝██╔══██╗     ║
-║   █████╗  ██║     ███████║   ██║      ██║   ██████╔╝     ║
-║   ██╔══╝  ██║     ██╔══██║   ██║      ██║   ██╔══██╗     ║
-║   ██║     ███████╗██║  ██║   ██║      ██║   ██║  ██║     ║
-║   ╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝     ║
-║                                                           ║
-║   ████████╗██████╗  █████╗ ███████╗██╗  ██╗              ║
-║   ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██║  ██║              ║
-║      ██║   ██████╔╝███████║███████╗███████║              ║
-║      ██║   ██╔══██╗██╔══██║╚════██║██╔══██║              ║
-║      ██║   ██║  ██║██║  ██║███████║██║  ██║              ║
-║      ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝              ║
-║                                                           ║
-║            SCRIPT DE LIMPEZA E OTIMIZAÇÃO v2.1           ║
-║                                                           ║
-║                  Autor: João M J Braga                    ║
-║          GitHub: github.com/joaomjbraga                   ║
-╚═══════════════════════════════════════════════════════════╝
-
-ℹ Log será salvo em: /var/log/flattrash_20241111_143022.log
-ℹ Espaço livre antes da limpeza: 15.2G
-
-╔═══════════════════════════════════════════════════════════╗
-║                   RELATÓRIO FINAL                         ║
-╠═══════════════════════════════════════════════════════════╣
-║ Espaço livre antes:  15.2G (15GB)
-║ Espaço livre agora:  18.7G (18GB)
-║ Espaço liberado:    3GB
-║
-║ Log completo salvo em:
-║ /var/log/flattrash_20241111_143022.log
-╚═══════════════════════════════════════════════════════════
-
-✓ Sistema otimizado e limpo!
-ℹ Recomenda-se reiniciar o sistema para aplicar todas as mudanças
+# Executar primeiro com dry-run
+sudo ./system-maintenance.sh --dry-run
 ```
 
 ---
 
-## 🔧 Personalização
+## Uso
 
-Você pode personalizar o script editando as seguintes variáveis e seções:
+### Uso Básico
 
 ```bash
-# Tempo de retenção de logs (padrão: 7 dias ou 100MB)
-journalctl --vacuum-time=7d
-journalctl --vacuum-size=100M
+# Manutenção completa
+sudo ./system-maintenance.sh
 
-# Idade dos arquivos de cache a remover (padrão: 30 dias)
-find "$HOME/.cache" -type f -atime +30 -delete
+# Visualizar sem fazer alterações
+sudo ./system-maintenance.sh --dry-run
 
-# Idade dos arquivos temporários (padrão: 2 dias em /tmp, 7 dias em /var/tmp)
-find /tmp -type f -atime +2 -delete
-find /var/tmp -type f -atime +7 -delete
+# Modo interativo (confirmações)
+sudo ./system-maintenance.sh --interactive
 
-# Cores da interface (variáveis no início do script)
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly PURPLE='\033[0;35m'
-readonly CYAN='\033[0;36m'
+# Modo silencioso (apenas logs)
+sudo ./system-maintenance.sh --quiet
+```
+
+### Opções Avançadas
+
+```bash
+# Pular operações específicas
+sudo ./system-maintenance.sh --no-flatpak --no-snap
+
+# Pular limpeza de logs (recomendado para servidores)
+sudo ./system-maintenance.sh --no-logs
+
+# Forçar reinicialização automática
+sudo ./system-maintenance.sh --force-reboot
+
+# Combinação
+sudo ./system-maintenance.sh --dry-run --no-snap --interactive
+```
+
+### Flags CLI
+
+| Flag | Descrição |
+|------|-----------|
+| `-d, --dry-run` | Simula ações sem fazer alterações |
+| `-i, --interactive` | Solicita confirmação antes das operações |
+| `-q, --quiet` | Suprime saída do console (apenas arquivo de log) |
+| `--no-flatpak` | Pula manutenção do Flatpak |
+| `--no-snap` | Pula manutenção do Snap |
+| `--no-logs` | Pula limpeza de logs do sistema |
+| `--force-reboot` | Reinicia automaticamente após conclusão |
+| `-h, --help` | Mostra mensagem de ajuda |
+| `-v, --version` | Mostra informações de versão |
+
+### Automação
+
+**Cron (manutenção mensal):**
+```bash
+# Editar crontab
+sudo crontab -e
+
+# Adicionar linha (executa às 3h no primeiro dia do mês)
+0 3 1 * * /caminho/para/system-maintenance.sh --quiet --no-logs >> /var/log/system-maintenance/cron.log 2>&1
+```
+
+**Timer Systemd:**
+```ini
+# /etc/systemd/system/system-maintenance.timer
+[Unit]
+Description=Manutenção mensal do sistema
+
+[Timer]
+OnCalendar=monthly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+```ini
+# /etc/systemd/system/system-maintenance.service
+[Unit]
+Description=Script de manutenção do sistema
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/system-maintenance.sh --quiet
+```
+
+```bash
+# Habilitar e iniciar
+sudo systemctl enable --now system-maintenance.timer
 ```
 
 ---
 
-## 🤝 Contribuindo
+## Registro de Logs
 
-Contribuições são bem-vindas! Sinta-se à vontade para:
+Todas as operações são registradas em:
+```
+/var/log/system-maintenance/run_AAAAMMDD_HHMMSS.log
+```
 
-1. Fazer um Fork do projeto
-2. Criar uma branch para sua feature (`git checkout -b feature/NovaFuncionalidade`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
-5. Abrir um Pull Request
+**Formato do log:**
+```
+[2025-01-15 14:30:22] [INFO] Iniciando manutenção do sistema (versão 3.0.0)
+[2025-01-15 14:30:23] [OK] Validação de ambiente passou
+[2025-01-15 14:30:25] [OK] Lista de pacotes com backup
+[2025-01-15 14:30:30] [WARN] Sem conectividade com internet detectada
+[2025-01-15 14:35:45] [ERROR] Operação falhou (código de saída: 1)
+```
 
-### 💡 Ideias para Contribuição
+**Análise de logs:**
+```bash
+# Verificar erros
+grep ERROR /var/log/system-maintenance/*.log
 
-- Suporte para outras distribuições Linux (Fedora, Arch, etc.)
-- Modo interativo para escolher quais limpezas executar
-- Opção de dry-run (simular sem executar)
-- Relatórios em HTML ou JSON
-- Agendamento automático via cron
+# Ver última execução
+ls -t /var/log/system-maintenance/*.log | head -1 | xargs cat
+
+# Monitorar em tempo real
+tail -f /var/log/system-maintenance/run_*.log
+```
 
 ---
 
-## 📝 Changelog
+## Exemplo de Saída
 
-### Versão 2.1 (Atual)
+```
+→ Validando ambiente...
+✓ Validação de ambiente passou
+→ Criando backup de pacotes...
+✓ Lista de pacotes salva em: /var/backups/system-maintenance/packages_20250115_143022.txt
+→ Atualizando listas de pacotes...
+✓ apt update
+→ Verificando pacotes não utilizados...
+→ Encontrados 8 pacotes não utilizados
+✓ Remover pacotes não utilizados
+→ Limpando cache APT...
+✓ Cache APT limpo (liberado 245MB)
+→ Verificando pacotes órfãos...
+✓ Nenhum pacote órfão encontrado
+...
 
-- 🔒 Melhor tratamento de erros com `set -euo pipefail`
-- 📝 Sistema de logs completo com timestamps
-- 💾 Backup automático da lista de pacotes
-- 🌐 Verificação de conexão com internet
-- 🧹 Limpeza de cache de múltiplos usuários
-- 🔧 Limpeza de cache Python (pip) e npm
-- 📊 Estatísticas mais detalhadas durante execução
-- ⚠️ Melhor tratamento de warnings e erros
-- 🔄 Função `safe_remove` para operações mais seguras
-- 📦 Suporte completo para Snap (remoção de versões antigas)
-- 🗑️ Limpeza de logs compactados (.gz, .log.\*)
-- 🔍 Atualização do database do locate
+═══════════════════════════════════════════════════════════
+RELATÓRIO DE MANUTENÇÃO
+═══════════════════════════════════════════════════════════
+
+  Espaço antes:       15GB
+  Espaço depois:      18GB
+  Espaço liberado:    3GB
+
+  Pacotes removidos:  8
+  Órfãos removidos:   0
+  Cache limpo:        245MB
+  Erros:              0
+
+  Arquivo de log:     /var/log/system-maintenance/run_20250115_143022.log
+═══════════════════════════════════════════════════════════
+```
+
+---
+
+## Configuração
+
+Edite as constantes no início do script:
+
+```bash
+# Retenção de cache
+readonly CACHE_AGE_DAYS=30           # Idade dos arquivos de cache do usuário
+
+# Retenção de arquivos temporários
+readonly TMP_AGE_DAYS=2              # Idade dos arquivos em /tmp
+
+# Retenção de logs
+readonly LOG_RETENTION_DAYS=7        # Retenção de logs do sistema
+readonly LOG_MAX_SIZE="100M"         # Tamanho máximo do journal
+
+# Segurança
+readonly MIN_REQUIRED_SPACE_GB=5     # Espaço livre mínimo para prosseguir
+
+# Diretórios
+readonly LOG_DIR="/var/log/system-maintenance"
+readonly BACKUP_DIR="/var/backups/system-maintenance"
+```
+
+---
+
+## Segurança
+
+**Proteções integradas:**
+- ✅ Verificação de privilégios root
+- ✅ Backup automático da lista de pacotes
+- ✅ `set -euo pipefail` para tratamento robusto de erros
+- ✅ Handlers `trap` para limpeza e registro de erros
+- ✅ Validação de caminho em `safe_remove()` (bloqueia `/`, `/home`, `/root`)
+- ✅ Detecção de bloqueio dpkg com timeout
+- ✅ Requisito de espaço mínimo em disco
+- ✅ Detecção de ambiente (pula operações em containers)
+- ✅ Modo dry-run para testes
+- ✅ Todas as operações destrutivas são registradas
+- ✅ Falhas não-críticas não abortam o script
+- ✅ Verificações de existência de comando antes da execução
+
+**Local do backup:**
+```
+/var/backups/system-maintenance/packages_AAAAMMDD_HHMMSS.txt
+```
+
+**Restaurar pacotes do backup:**
+```bash
+sudo dpkg --set-selections < /var/backups/system-maintenance/packages_20250115.txt
+sudo apt-get dselect-upgrade
+```
+
+---
+
+## Uso em Produção
+
+### Checklist Pré-implantação
+
+1. **Testar em ambiente não-produção primeiro**
+   ```bash
+   sudo ./system-maintenance.sh --dry-run
+   ```
+
+2. **Revisar logs após execução de teste**
+   ```bash
+   cat /var/log/system-maintenance/run_*.log
+   ```
+
+3. **Ajustar flags para seu ambiente**
+   - Servidores: `--no-logs` (preserva logs de aplicação)
+   - Desktop: flags padrão
+   - Containers: detecção automática, operações limitadas
+
+4. **Configurar monitoramento**
+   ```bash
+   # Alertar em caso de erros
+   grep -q ERROR /var/log/system-maintenance/*.log && notificar-admin
+   ```
+
+### Considerações para Servidores
+
+**Flags recomendadas:**
+```bash
+sudo ./system-maintenance.sh --quiet --no-logs
+```
+
+**Por que `--no-logs`?**
+- Preserva logs de aplicação
+- Previne remoção acidental de trilhas de auditoria
+- Limpeza do journal pode ser muito agressiva para produção
+
+**Gerenciamento alternativo de logs:**
+```bash
+# Limpeza manual do journal (mais conservadora)
+sudo journalctl --vacuum-time=30d
+```
+
+### Integração CI/CD
+
+```yaml
+# Exemplo GitLab CI
+manutencao:
+  stage: deploy
+  script:
+    - sudo /usr/local/bin/system-maintenance.sh --quiet --dry-run
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  tags:
+    - maintenance
+```
+
+---
+
+## Solução de Problemas
+
+**Script falha com erro "dpkg lock":**
+```bash
+# Aguardar conclusão de outras operações de pacote
+# Script automaticamente aguarda até 5 minutos
+```
+
+**Aviso de espaço em disco baixo:**
+```bash
+# Verificar uso atual
+df -h /
+
+# Revisar o que está usando espaço
+sudo du -sh /* | sort -h
+```
+
+**Erros no arquivo de log:**
+```bash
+# Verificar contagem de erros
+grep -c ERROR /var/log/system-maintenance/*.log
+
+# Ver erros específicos
+grep ERROR /var/log/system-maintenance/*.log
+
+# A maioria dos erros são não-críticos e registrados para auditoria
+```
+
+**Deborphan não instalado:**
+```bash
+# Script instala automaticamente se necessário
+# Ou instalar manualmente:
+sudo apt install deborphan
+```
+
+---
+
+## Detecção de Ambiente
+
+O script detecta e se adapta a:
+
+| Ambiente | Comportamento |
+|----------|---------------|
+| **Container** | Pula prompts de reinicialização, operações de log limitadas |
+| **WSL** | Operações padrão, consciente do WSL |
+| **Desktop** | Conjunto completo de recursos |
+| **Servidor** | Operações padrão, uso de `--no-logs` recomendado |
+
+---
+
+## Limitações
+
+**Não realizado:**
+- ❌ Remoção de kernels antigos (lógica específica da distro necessária)
+- ❌ Verificação de integridade de pacotes
+- ❌ Rollback automático em caso de falha
+- ❌ Limpeza de cache de aplicações personalizadas
+
+**Soluções alternativas:**
+
+```bash
+# Remover kernels antigos (Ubuntu/Debian)
+sudo apt autoremove --purge
+
+# Verificar integridade de pacotes
+sudo debsums -c
+
+# Cache de app personalizado (exemplo: Docker)
+docker system prune -a
+```
+
+---
+
+## Contribuindo
+
+Contribuições são bem-vindas! Áreas para melhoria:
+
+- [ ] Suporte multi-distro (Fedora, Arch)
+- [ ] Lógica de limpeza de kernel
+- [ ] Saída de relatório HTML/JSON
+- [ ] Whitelist para pacotes críticos
+- [ ] Flag de limite máximo de remoção (`--max-remove N`)
+- [ ] Notificações por email/webhook
+- [ ] Suporte a arquivo de configuração
+
+**Processo de contribuição:**
+1. Fork do repositório
+2. Criar branch de feature (`git checkout -b feature/descricao`)
+3. Commit das alterações (`git commit -m 'Adicionar feature'`)
+4. Push para o branch (`git push origin feature/descricao`)
+5. Abrir Pull Request
+
+---
+
+## Histórico de Versões
+
+### Versão 3.0.0 (Atual)
+
+**Refatoração maior:**
+- Reescrita completa para confiabilidade em produção
+- Não-interativo por padrão
+- Flags CLI abrangentes
+- Registro estruturado com rastreamento de erros
+- Detecção de ambiente
+- Tratamento de erros melhorado com trap
+- Validação de caminho em safe_remove
+- Tratamento de bloqueio dpkg com timeout
+- Rastreamento de métricas e relatórios detalhados
+- Modo dry-run
+- Rotação automática de backup de pacotes
+- Detecção de Container/WSL
+
+### Versão 2.1
+
+- Melhorias no tratamento de erros
+- Sistema de registro completo
+- Backup automático de pacotes
+- Verificação de conectividade com internet
+- Limpeza de cache multi-usuário
+- Suporte a cache pip/npm
 
 ### Versão 2.0
 
-- ✨ Interface visual completamente redesenhada
-- 📊 Adicionado relatório de espaço liberado
-- 🎨 Cores e ícones para melhor visualização
-- 📈 Estatísticas detalhadas durante a execução
-- 🚀 Opção de reiniciar o sistema ao final
-- 🧹 Limpeza adicional de thumbnails e /tmp
+- Redesign da interface visual
+- Relatório de espaço liberado
+- Estatísticas detalhadas
 
 ### Versão 1.0
 
-- 🎯 Versão inicial com funcionalidades básicas
+- Lançamento inicial
 
 ---
 
-## ⚠️ Aviso
+## Licença
 
-Este script foi desenvolvido e testado no **Pop!\_OS 22.04**, mas é compatível com outras distribuições baseadas em Debian/Ubuntu. Use por sua conta e risco. Sempre faça backup de dados importantes antes de executar scripts de limpeza do sistema.
-
-O script cria automaticamente um backup da lista de pacotes instalados em `/var/backups/flattrash_packages_backup_YYYYMMDD.txt` antes de executar qualquer operação.
+Licença MIT - Veja o arquivo [LICENSE](LICENSE) para detalhes.
 
 ---
 
-## 🐛 Problemas Conhecidos
-
-Se você encontrar problemas:
-
-1. Verifique os logs em `/var/log/flattrash_*.log`
-2. Certifique-se de ter conexão com internet
-3. Verifique se tem privilégios de root (sudo)
-4. Alguns avisos (warnings) são normais e não indicam falha
-
----
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
-
-## 👤 Autor
+## Autor
 
 **João M J Braga**
 
 - GitHub: [@joaomjbraga](https://github.com/joaomjbraga)
-- Projeto: [FlatTrash](https://github.com/joaomjbraga/flattrash)
+- Projeto: [system-maintenance](https://github.com/joaomjbraga/system-maintenance)
 
 ---
 
-## 🌟 Mostre seu Apoio
+## Agradecimentos
 
-Se este projeto foi útil para você, considere dar uma ⭐️!
+Originalmente desenvolvido como **FlatTrash** v2.1, refatorado para padrões de nível de produção na v3.0.0.
 
----
 
-## 📚 FAQ
-
-**P: O script é seguro?**
-R: Sim! O script usa apenas comandos oficiais do sistema e remove apenas arquivos temporários e caches. Ele também cria um backup antes de executar.
-
-**P: Posso usar em produção?**
-R: Recomendamos testar em ambiente de desenvolvimento primeiro. O script é seguro, mas cada sistema é único.
-
-**P: Com que frequência devo executar?**
-R: Depende do uso. Recomendamos executar mensalmente ou quando notar que o espaço está baixo.
-
-**P: O script remove arquivos importantes?**
-R: Não. O script remove apenas caches, arquivos temporários e pacotes não utilizados. Dados do usuário nunca são tocados.
-
-**P: Preciso reiniciar após executar?**
-R: Recomendamos reiniciar para aplicar todas as mudanças, mas não é obrigatório.
-
----
-
-<div align="center">
-
-**Mantenha seu sistema Linux limpo e otimizado!** 🚀
-
-</div>
+**Mantenha seu sistema Linux otimizado e sustentável.**
